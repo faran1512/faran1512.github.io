@@ -425,7 +425,7 @@ h3 {
     font-size: 13px;
 }
 
-@media screen and (min-width: 1000px) {
+@media screen and (max-width: 700px) {
     .ucp_today_items ul {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
