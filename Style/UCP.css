@@ -90,7 +90,7 @@
 }
 .ucp_today_items ul{
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(50em, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(500em, 1fr));
     grid-template-rows: repeat(2, 1fr);
     height: auto;
     grid-gap: 12px 12px;
