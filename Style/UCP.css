@@ -429,6 +429,7 @@ h3 {
     .ucp_today_items ul {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-rows: repeat(auto-fit, minmax(250px, 1fr));
     }
     .msg {
         padding-top: 40px;
