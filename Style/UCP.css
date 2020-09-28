@@ -6,7 +6,7 @@
 
 .navigation {
     background-image: url("../images/front img.jpg");
-    background-size: auto;
+    background-size: cover;
     background-attachment: fixed;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -15,8 +15,8 @@
 }
 
 .im {
-    width: 10em;
-    height: 3em;
+    width: 17em;
+    height: 4em
 }
 
 .navigation .logo {
@@ -222,15 +222,20 @@ h3 {
     padding-bottom: 30px;
 }
 
+.ucp_events_items {
+    margin: auto;
+    width: 87%;
+}
+
 .ucp_events_items ul{
     list-style-type: none;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     margin: 0;
+    padding: 0;
     height: auto;
     line-height: 2;
     text-align: left;
-    padding-left: 40px;
     grid-gap: 30px;
 }
 
@@ -280,11 +285,6 @@ h3 {
     color: black;
     font-weight: 800;
     font-size: 18px;
-}
-
-.ucp_events_items {
-    margin: 0px 70px;
-    width: 87%;
 }
 
 .more_ucp_events{
