@@ -4,3 +4,323 @@ layout: default
 
 # root@faran1512:~$ ls posts/
 
+In this blog we will see how to set up the fuzzer for `libtiff` and find the heap-based buffer overflow that is registered as CVE-2020-35524. 
+
+**NOTE:** This is not a workshop on AFL++ and skips over a few concepts without explaining them, such as AFL persistence mode, cmplog, compcov etc. If you want to find the details, there is no better place than the [AFL++ documentation](https://github.com/AFLplusplus/AFLplusplus/tree/stable/docs). The `fuzzing_in_depth.md` document explains almost everything you need to get started.
+# Compiling Target
+
+I compile the target with different options, for example, cmplog, compcov, different sanitizers, in order to increase chances of finding bugs and using AFL++ to its fullest.
+
+```bash
+cd <libtiffdirectory> && ./autogen.sh && CC=afl-clang-lto CXX=afl-clang-lto++ ./configure --disable-shared
+
+for i in cmplog compcov asan ubsan simple;do cp -r <libtiffdirectory> <libtiff_directory>-$$i;done
+
+make -C <libtiff_directory>-simple -j$(nproc)
+make AFL_USE_ASAN=1 -C <libtiff_directory>-asan -j$(nproc)
+make AFL_USE_UBSAN=1 -C <libtiff_directory>-ubsan -j$(nproc)
+make AFL_USE_ASAN=1 AFL_LLVM_CMPLOG=1 -C <libtiff_directory>-cmplog -j$(nproc)
+make AFL_USE_ASAN=1 AFL_LLVM_LAF_ALL=1 -C <libtiff_directory>-compcov -j$(nproc)
+
+// Compiling for coverage
+
+CC=clang-14 CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage" LFLAGS+="--coverage -lgcov" ./configure --disable-shared
+make -C <libtiff_directory>-coverage -j$(nproc)
+```
+
+# CVE Description
+
+```text
+A heap-based buffer overflow flaw was found in libtiff in the handling of TIFF images in libtiff's TIFF2PDF tool. A specially crafted TIFF file can lead to arbitrary code execution. The highest threat from this vulnerability is to confidentiality, integrity, as well as system availability.
+```
+
+# Patch
+
+```c
+// 11 additions and 3 deletions
+
+- k = checkMultiply64(TIFFScanlineSize(input), t2p->tiff_length, t2p);
+-	if(t2p->tiff_planar==PLANARCONFIG_SEPARATE){
+-		k = checkMultiply64(k, t2p->tiff_samplesperpixel, t2p);
+	
++ #ifdef JPEG_SUPPORT
++	if(t2p->pdf_compression == T2P_COMPRESS_JPEG
++	   && t2p->tiff_photometric == PHOTOMETRIC_YCBCR) {
++		k = checkMultiply64(TIFFNumberOfStrips(input), TIFFStripSize(input),     + t2p);
++	} else
++ #endif
++	{
++		k = checkMultiply64(TIFFScanlineSize(input), t2p->tiff_length, t2p);
++		if(t2p->tiff_planar==PLANARCONFIG_SEPARATE){
++			k = checkMultiply64(k, t2p->tiff_samplesperpixel, t2p);
++		}
+```
+
+# Creating an input that triggers the vulnerable code 
+
+There are a lot conditions in the code `tiff2pdf.c` that need to be dealt with in order to make the input that triggers the vulnerable code.
+
+The first condition is the given below:
+
+```c
+// Function -> void t2p_read_tiff_size(T2P* t2p, TIFF* input) in tiff2pdf.c
+
+if(t2p->pdf_transcode == T2P_TRANSCODE_RAW){
+	#ifdef CCITT_SUPPORT
+		return;
+	#endif
+	
+	#ifdef ZIP_SUPPORT
+		return;
+	#endif
+	
+	#ifdef OJPEG_SUPPORT
+		return;
+	#endif
+	
+	#ifdef JPEG_SUPPORT
+		return;
+	#endif
+}
+```
+
+There are 2 methods to deal with this:
+1. We can give the compression schemes other than the ones above, as they return from the function and we do not want that. It is because the vulnerable code comes after the `if` condition. 
+2. We can give the compression scheme as `None`. It will pass the condition, and also the input `TIFF` file will contain raw uncompressed bytes, that will make analysis easier later on. 
+
+We will choose option 2 as it will make our lives easier later on. 
+
+Now, lets make a TIFF file using `imagemagick` and then change its properties. We also need to set bits/sample to 8.
+
+```bash
+convert -depth 8 -size 100x100 xc:white -compress None sample.tif
+```
+
+Run `./tiffinfo` on `sample.tif` and we get:
+
+```bash
+TIFF Directory at offset 0x132 (306)
+  Image Width: 100 Image Length: 100
+  Bits/Sample: 8
+  Compression Scheme: None
+  Photometric Interpretation: min-is-black
+  FillOrder: msb-to-lsb
+  Orientation: row 0 top, col 0 lhs
+  Samples/Pixel: 1
+  Rows/Strip: 100
+  Planar Configuration: single image plane
+  Page Number: 0-1
+  White Point: 0.3127-0.329
+  PrimaryChromaticities: 0.640000,0.330000,0.300000,0.600000,0.150000,0.060000
+  Predictor: horizontal differencing 2 (0x2)
+```
+
+This image will not let anything execute in body of `if` condition. 
+
+Next we have the statement:
+
+```c
+k = checkMultiply64(TIFFScanlineSize(input), t2p->tiff_length, t2p);
+```
+
+We analyze the `TIFFScanlineSize` function. This function is in `tif_strip.c`
+
+`TIFFScanlineSize` calls `TIFFScanlineSize64`. There are few checks that we need to pass.
+
+```c
+if (td->td_planarconfig==PLANARCONFIG_CONTIG)
+{
+	if ((td->td_photometric==PHOTOMETRIC_YCBCR)&&
+		(td->td_samplesperpixel==3)&&
+		(!isUpSampled(tif)))
+		{
+
+```
+
+We set the samples per pixel to 3. 
+
+```bash
+tiffset -s 277 3 sample.tif
+```
+
+Right now we have `Photometric Interpretation: min-is-black`. we need to set it to YCBCR. 
+
+```bash
+tiffset -s 262 6 sample.tif
+```
+
+Finally, we have a TIFF file that will trigger the vulnerable code
+
+```bash
+TIFF Directory at offset 0x1f8 (504)
+  Image Width: 50 Image Length: 50
+  Bits/Sample: 8
+  Compression Scheme: None
+  Photometric Interpretation: YCbCr
+  FillOrder: msb-to-lsb
+  Orientation: row 0 top, col 0 lhs
+  Samples/Pixel: 3
+  Rows/Strip: 50
+  Planar Configuration: single image plane
+  Page Number: 0-1
+  White Point: 0.3127-0.329
+  PrimaryChromaticities: 0.640000,0.330000,0.300000,0.600000,0.150000,0.060000
+  Predictor: horizontal differencing 2 (0x2)
+```
+
+This one input is enough for our input corpus and let's run the fuzzer and find the crash. 
+Before that, we also need to set `pdf_compression` to `JPEG` using the `-j` option.
+
+We get all this information, from reading the merge_requests, after this vulnerability was disclosed. Links are given below.
+
+https://gitlab.com/libtiff/libtiff/-/merge_requests/159
+https://gitlab.com/rzkn/libtiff/-/commit/7be2e452ddcf6d7abca88f41d3761e6edab72b22
+
+Basically, this vulnerability is triggered when we use `photometric_compression: YCbCr` and use the `pdf_compression: JPEG`. With these options `checkMultiply64(TIFFScanlineSize(input), t2p->tiff_length, t2p);` returns a wrong size, causing a heap-based buffer overflow.
+
+# Fuzzer Commands
+
+```bash
+gnome-terminal --window -- bash -c "afl-fuzz -i $(input) -o $(out_afl) -m none -x $(dict) -M main -- ./$(target_name)-simple/$(executable) @@ -j -o /dev/null"
+
+gnome-terminal --window -- bash -c "afl-fuzz -i $(input) -o $(out_afl) -m none -x $(dict) -S asan -- ./$(target_name)-asan/$(executable) @@ -j -o /dev/null"
+```
+
+We can find dictionary for TIFF format in `dictionaries` directory of AFLPlusPlus source code.  Only these 2 instances were enough to cause a crash within first few seconds of the running.
+
+We get the following crash:
+
+```bash
+Command: ./tiff2pdf -j <crashing_input>
+
+=================================================================
+==1886461==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x620000000ede at pc 0x5afb390a8fa0 bp 0x7ffcdc22ad00 sp 0x7ffcdc22acf8
+READ of size 1 at 0x620000000ede thread T0
+    #0 0x5afb390a8f9f in JPEGEncodeRaw /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/libtiff/tif_jpeg.c:2163:21
+    #1 0x5afb39150f19 in TIFFWriteEncodedStrip /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/libtiff/tif_write.c:295:7
+    #2 0x5afb38f4426b in t2p_readwrite_pdf_image /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf.c
+    #3 0x5afb38f14b75 in t2p_write_pdf /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf.c:5623:15
+    #4 0x5afb38f0ffcf in main /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf.c:810:2
+    #5 0x7686d9029d8f in __libc_start_call_main csu/../sysdeps/nptl/libc_start_call_main.h:58:16
+    #6 0x7686d9029e3f in __libc_start_main csu/../csu/libc-start.c:392:3
+    #7 0x5afb38e4bde4 in _start (/home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf+0xd2de4) (BuildId: 86cb3faa4d9d1416)
+
+0x620000000ede is located 3 bytes to the right of 3675-byte region [0x620000000080,0x620000000edb)
+allocated by thread T0 here:
+    #0 0x5afb38ecec2e in malloc (/home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf+0x155c2e) (BuildId: 86cb3faa4d9d1416)
+    #1 0x5afb38f3d318 in _TIFFmalloc /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/libtiff/tif_unix.c:314:10
+    #2 0x5afb38f3d318 in t2p_readwrite_pdf_image /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf.c:2497:29
+    #3 0x5afb38f14b75 in t2p_write_pdf /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/tools/tiff2pdf.c:5623:15
+
+SUMMARY: AddressSanitizer: heap-buffer-overflow /home/faran/AFL/libtiff-v4.1.0_fuzz/libtiff-v4.1.0-asan/libtiff/tif_jpeg.c:2163:21 in JPEGEncodeRaw
+Shadow bytes around the buggy address:
+  0x0c407fff8180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c407fff8190: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c407fff81a0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c407fff81b0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x0c407fff81c0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x0c407fff81d0: 00 00 00 00 00 00 00 00 00 00 00[03]fa fa fa fa
+  0x0c407fff81e0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c407fff81f0: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c407fff8200: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c407fff8210: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+  0x0c407fff8220: fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa fa
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==1886461==ABORTING
+```
+
+# Root Cause Analysis
+
+## Call Stack
+
+```mermaid
+graph TD
+id1(main)
+id1.1(t2p_write_pdf)
+id1.2(t2p_readwrite_pdf_image)
+id1.3(TIFFWriteEncodedStrip)
+id1.4(JPEGEncodeRaw)
+id1 -- tiff2pdf.c 810:2 --> id1.1
+id1.1 -- tiff2pdf.c 5623:15 --> id1.2
+id1.2 -- tiffwrite.c 295:7 --> id1.3
+id1.3 -- tif_jpeg.c 2163:21 --> id1.4
+```
+
+##  Allocation
+
+```mermaid
+graph TD
+id1(t2p_write_pdf)
+id1.1(t2p_readwrite_pdf_image)
+id1.2(_TIFFmalloc)
+id1.3(malloc)
+id1 -- tiff2pdf.c 5623:15 --> id1.1
+id1.1 -- tiff2pdf.c 2497:29  --> id1.2
+id1.2 --> id1.3
+```
+
+### tiff2pdf.c line 2497
+
+```c
+if(t2p->pdf_sample==T2P_SAMPLE_NOTHING){
+	buffer = (unsigned char*) _TIFFmalloc(t2p->tiff_datasize);
+```
+
+Now we need to see where `t2p->tiff_datasize` gets it value.
+
+### t2p->tiff_datasize
+
+`t2p->tiff_datasize` is getting is value at `t2p_read_tiff_size:2075` with the following statement:
+```c
+t2p->tiff_datasize = (tsize_t) k;
+```
+
+The value `k` is coming from `t2p_read_tiff_size:2066` :
+```c
+k = checkMultiply64(TIFFScanlineSize(input), t2p->tiff_length, t2p);
+```
+
+We run the code in gdb and put break on `checkMultiply64` and see the arguments passed to it. 
+```bash
+$ gdb ./tiff2pdf
+
+gef> b checkMultiply64
+gef> r -j /home/faran/AFL/libtiff-v4.1.0_fuzz/out/asan/crashes/id\:000000\,sig\:06\,src\:000000\,time\:35985\,execs\:3721\,op\:flip2\,pos\:512 -o /dev/null
+```
+
+```c
+k = checkMultiply64(0x4b, 0x31, 0x00005555556002a0);
+```
+
+We use `finish` to return from the function. We get return value as:
+
+```c
+k = 0xe5b //3675
+```
+
+So, 
+```c
+t2p->tiff_datasize = 0xe5b //3675
+```
+
+The buffer is allocated a size of 3675 bytes. 
+
+
