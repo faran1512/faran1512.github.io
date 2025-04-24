@@ -16,7 +16,7 @@ The maps consists of:
 * `DescriptorArray`: The full list of properties that this class has along with information about them. In some cases, the property value is even in this array.
 * `TransitionArray`: An array of "edges" from this Map to sibling Maps. Each edge is a property name, and should be thought of as "if I were to add a property with this name to the current class, what class would I transition to?"
 
-The purpose of maps is to save space and fast property access. Instead of objects with the same shape storing their own copies of properties and hence taking more space, Maps store the same properties at one place and only different values are stored either in-object or in properties store. The `DescriptorArray` is the one that contains the properties and their offsets that point to either their respective objects or at some in index in properties store.
+The purpose of maps is to save space and fast property access. Instead of objects with the same shape storing their own copies of properties and hence taking more space, Maps store the same properties at one place and only different values are stored either in-object or in properties store. The `DescriptorArray` is the one that contains the properties and their offsets that point to either their respective objects (if property is in-object) or at some in index in properties store.
 
 Now, let's take a small example to discuss how maps are made.
 
@@ -25,3 +25,5 @@ var obj = {};
 obj.a0 = 1;
 obj.a1 = 2;
 ```
+
+![Map of obj](./Assets/Understanding_Maps_in_v8/obj_map.drawio.png)
