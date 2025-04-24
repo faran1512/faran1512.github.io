@@ -26,4 +26,4 @@ obj.a0 = 1;
 obj.a1 = 2;
 ```
 
-![Map of obj](./Assets/Understanding_Maps_in_v8/obj_map.drawio.png)
+![Map of obj](./Assets/Understanding_Maps_in_v8/obj_map.drawio.svg "Map of obj")
