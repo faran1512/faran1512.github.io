@@ -28,3 +28,14 @@ obj.a1 = 2;
 <p align="center">
   <img src="./Assets/Understanding_Maps_in_v8/obj_map.drawio.svg" />
 </p>
+
+The main thing to note here is that whenever a new property is added to the object, a new map is formed that contains information about the previously added properties and the new one. Now, question arises that how do the maps know where to transition next or how to go back. There is a `TransitionArray` that contains information about which map to go to if a certain property is added. Maps also contain `back_pointer` field that points to a previous map and we can go all the way back to the root map.
+
+let's confirm our theory using d8:
+
+
+
+```JS
+var obj = {};
+obj.a0 = 1;
+obj.a1 = 2;
