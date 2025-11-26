@@ -1,12 +1,14 @@
 ---
 title: Setting up elixir bootlin for chromium source code
-date: 2025-11-27 12:13:47 +0000
+date: 2025-11-26 12:13:47 +0000
 categories: [Code Auditing]
 tags: [chromium code search, elixir bootlin, code referencing, code audit]     # TAG names should always be lowercase
 author: faran1512
+description: Short summary of the post.
 ---
 
 In this post we will see how we can set up the chromium source code in elixir bootlin. [Chromium Code Search](https://source.chromium.org/chromium/chromium/src) is good but it has some limitations like it cannot show references for older versions or whenever you search for a function in the search bar, the new function always opens in the `main` branch and you have to manually go back to older version. Now, the search method can be worked with but no references on older version can make code auditing really slow and frustrating. These are the reasons that lead me to look for alternatives and try the elixir cross referencer.
+
 # What is elixir Cross Referencer?
 
 Elixir is a source code cross-referencer inspired by [LXR](https://en.wikipedia.org/wiki/LXR_Cross_Referencer). It’s written in Python and its main purpose is to index every release of a C or C++ project (like the Linux kernel) while keeping a minimal footprint.
@@ -256,6 +258,6 @@ Go to the browser and type:
 http://localhost:8080/
 ```
 
-We will see the following:
+The source code will open in the browser:
 
 ![chromium source code in elixir bootlin](../assets/img/Blogs/elixir.png)
