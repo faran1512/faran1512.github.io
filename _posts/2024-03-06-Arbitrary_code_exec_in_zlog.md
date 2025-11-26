@@ -5,6 +5,7 @@ categories: [Vulnerability Research, Exploit development]
 tags: [fuzzing, vulnerability research, exploit development, afl++, coverage-guided fuzzing]     # TAG names should always be lowercase
 author: faran1512
 description: Short summary of the post.
+redirect_to: "https://www.ebryx.ae/blogs/arbitrary-code-execution-in-zlog-cve-2024-22857"
 ---
 
 # sample
