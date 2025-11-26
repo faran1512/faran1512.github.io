@@ -100,7 +100,7 @@ linux@linux:/usr/local/elixir$ ./script.sh list-tags
 
 Now, before creating database, I think it is very crucial that we decide on the version we want to work on and only build that, as generating full database takes tens of hours as told in official documentation:
 
-```txt
+```text
 Generating the full database can take a long time: it takes about 15 hours on a Xeon E3-1245 v5 to index 1800 tags in the Linux kernel. For that reason, you may want to tweak the script (for example, by limiting the number of tags with a "head") in order to test the update and query commands. You can even create a new Git repository and just create one tag instead of using the official kernel repository which is very large.
 ```
 
@@ -108,7 +108,7 @@ The chromium code might end up taking a lot more time than the linux kernel. So,
 
 In the `/usr/local/elixir/projects` directory make a file by name of project specified in `/home/linux/elixir-data` as `<project.sh>` or in our case `chromium.sh` and paste the following text:
 
-```txt
+```bash
 list_tags()
 {
     echo "125.0.6422.112"
@@ -188,13 +188,13 @@ As we can see above the database generation was a success. Now, the only step re
 
 We need to set a new env variable that points to the top level directory containing all the projects as the web server includes support for multiple projects to be indexed. In `/etc/project` add a new line:
 
-```txt
+```bash
 export LXR_PROJ_DIR=/home/linux/elixir-data
 ```
 
 Next replace `/etc/apache2/sites-enabled/000-default.conf` with `/usr/local/elixir/docker/000-default.conf`.  We need to make few changes to `docker/000-default.conf` though. 
 
-```txt
+```bash
 linux@linux:/usr/local/elixir$ cat /etc/apache2/sites-enabled/000-default.conf 
 
 <Directory /usr/local/elixir/>
@@ -254,7 +254,7 @@ sudo systemctl restart apache2.service
 
 Go to the browser and type:
 
-```txt
+```bash
 http://localhost:8080/
 ```
 
