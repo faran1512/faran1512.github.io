@@ -108,7 +108,7 @@ The chromium code might end up taking a lot more time than the linux kernel. So,
 
 In the `/usr/local/elixir/projects` directory make a file by name of project specified in `/home/linux/elixir-data` as `<project.sh>` or in our case `chromium.sh` and paste the following text:
 
-```bash
+```text
 list_tags()
 {
     echo "125.0.6422.112"
@@ -139,7 +139,7 @@ On my server with 30 treads it still took more than 3 hours just for one tag. Th
 
 We now query into the databases generated and see if everything works out fine.
 
-```bash
+```text
 linux@linux:/usr/local/elixir$ python3 -m utils.query ident 125.0.6422.112 AcceptParcel C
 
 Symbol Definitions:
@@ -188,13 +188,13 @@ As we can see above the database generation was a success. Now, the only step re
 
 We need to set a new env variable that points to the top level directory containing all the projects as the web server includes support for multiple projects to be indexed. In `/etc/project` add a new line:
 
-```bash
+```text
 export LXR_PROJ_DIR=/home/linux/elixir-data
 ```
 
 Next replace `/etc/apache2/sites-enabled/000-default.conf` with `/usr/local/elixir/docker/000-default.conf`.  We need to make few changes to `docker/000-default.conf` though. 
 
-```bash
+```text
 linux@linux:/usr/local/elixir$ cat /etc/apache2/sites-enabled/000-default.conf 
 
 <Directory /usr/local/elixir/>
@@ -254,7 +254,7 @@ sudo systemctl restart apache2.service
 
 Go to the browser and type:
 
-```bash
+```text
 http://localhost:8080/
 ```
 
