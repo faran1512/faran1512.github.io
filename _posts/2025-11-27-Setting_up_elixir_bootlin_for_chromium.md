@@ -56,7 +56,7 @@ We need to see 2 env variables that give indication about where the cloned repo 
 
 Next, add these variables to `etc/profile` and run command `source /etc/profile`.
 
-```txt
+```text
 export LXR_REPO_DIR=/home/linux/elixir-data/chromium/repo
 export LXR_DATA_DIR=/home/linux/elixir-data/chromium/data
 ```
