@@ -4,7 +4,7 @@ date: 2025-11-26 12:13:47 +0000
 categories: [Code Auditing]
 tags: [chromium code search, elixir bootlin, code referencing, code audit]     # TAG names should always be lowercase
 author: faran1512
-description: Short summary of the post.
+description: This post shows how we can set up chromium source code in the elixir project that makes code auditing very convinient.
 ---
 
 In this post we will see how we can set up the chromium source code in elixir bootlin. [Chromium Code Search](https://source.chromium.org/chromium/chromium/src) is good but it has some limitations like it cannot show references for older versions or whenever you search for a function in the search bar, the new function always opens in the `main` branch and you have to manually go back to older version. Now, the search method can be worked with but no references on older version can make code auditing really slow and frustrating. These are the reasons that lead me to look for alternatives and try the elixir cross referencer.
