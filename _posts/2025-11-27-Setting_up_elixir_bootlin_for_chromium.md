@@ -133,7 +133,7 @@ Now, we can create the database for only 1 version.
 ./update.py <number of threads>
 ```
 
-On my server with 30 treads it still took more than 3 hours just for one tag. This will create a lot of `*.db` files in `/home/linux/elixir-data/chromium/data` directory.
+On my server with 30 threads it still took more than 3 hours just for one tag. This will create a lot of `*.db` files in `/home/linux/elixir-data/chromium/data` directory.
 
 ## Testing database generation
 
@@ -242,6 +242,12 @@ sudo chown -R www-data:www-data /usr/local/elixir
 sudo chown -R www-data:www-data /home/linux/elixir-data
 sudo chmod -R 755 /usr/local/elixir
 sudo chmod -R 755 /home/linux/elixir-data
+```
+
+We need to tell apache to listen on port 8080:
+
+```bash
+echo "Listen 8080" | sudo tee -a /etc/apache2/ports.conf
 ```
 
 After this restart the http server:
