@@ -11,14 +11,12 @@
             "id": "3ddd3689a262d277",
             "type": "leaf",
             "state": {
-              "type": "markdown",
+              "type": "image",
               "state": {
-                "file": "_posts/2026-07-27-CVE-2024-5830: From Corrupted Array to Code Execution in Chrome's Renderer.md",
-                "mode": "source",
-                "source": false
+                "file": "assets/img/Blogs/CVE_2024_5830/object.png"
               },
-              "icon": "lucide-file",
-              "title": "2026-07-27-CVE-2024-5830: From Corrupted Array to Code Execution in Chrome's Renderer"
+              "icon": "lucide-image",
+              "title": "object"
             }
           }
         ]
@@ -185,8 +183,9 @@
   },
   "active": "3ddd3689a262d277",
   "lastOpenFiles": [
-    "assets/img/Blogs/CVE_2024_5830/object.png",
     "_posts/2026-07-27-CVE-2024-5830: From Corrupted Array to Code Execution in Chrome's Renderer.md",
+    "_posts/2026-07-27-CVE-2024-5830: From_Corrupted_Array_to_Code_Execution _in _Chrome's_Renderer.md",
+    "assets/img/Blogs/CVE_2024_5830/object.png",
     "assets/img/Blogs/CVE_2023_4069/oob_exploit_diagram_v2.jpg",
     "assets/vid/Blogs/CVE_2024_5830/demo_5830.webm",
     "assets/img/Blogs/CVE_2024_5830/v8_sandbox.png",
