@@ -266,4 +266,4 @@ http://localhost:8080/
 
 The source code will open in the browser:
 
-![chromium source code in elixir bootlin](../assets/img/Blogs/elixir.png)
+![chromium source code in elixir bootlin](../assets/img/Blogs/Bootlin/elixir.png)
