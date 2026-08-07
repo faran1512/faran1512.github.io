@@ -230,5 +230,3 @@ plugins:
 
 whitelist:
   - jekyll-redirect-from
-
-# pages source verification probe
