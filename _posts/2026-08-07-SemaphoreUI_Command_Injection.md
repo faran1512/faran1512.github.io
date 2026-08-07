@@ -1,6 +1,6 @@
 ---
 title: One Dash From RCE -- Git Argument Injection in Semaphore UI (0-day)
-date: 2026-08-07 12:13:47 +0000
+date: 2026-08-07 14:38:00 +0500
 categories: [Vulnerability Research]
 tags: [exploit-development, vulnerability-research, OS-command-injection, RCE, git, argument-injection]     # TAG names should always be lowercase
 author: faran1512
