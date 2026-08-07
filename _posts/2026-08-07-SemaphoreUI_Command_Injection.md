@@ -7,8 +7,6 @@ author: faran1512
 description: A leading dash in git_url turned a safe-looking exec call into remote code execution on the Semaphore server. CVSS 9.9, GHSA-xp7j-h7jc-4w8p.
 ---
 
-# One Dash From RCE: Git Argument Injection in Semaphore UI
-
 **GHSA-xp7j-h7jc-4w8p — CVSS 9.9 — affected 2.18.12 / 2.18.13 / 2.18.16, fixed in 2.18.20**
 
 ## Introduction
