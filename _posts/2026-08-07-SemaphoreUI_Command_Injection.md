@@ -529,4 +529,4 @@ Note the `strings.TrimSpace` — without it, `" --upload-pack=…"` with a leadi
 
 ## Demo
 
-![v8_sandbox](../assets/vid/Blogs/SemaphoreUI/demo_semaphoreUI.webm)
+![Demo](../assets/vid/Blogs/SemaphoreUI/demo_semaphoreUI.webm)
