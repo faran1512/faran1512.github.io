@@ -9,7 +9,7 @@ description: fof/oauth trusted Discord's unverified email and auto-linked it to 
 
 **GHSA-g7vj-c29h-3h5m - CVSS 9.8 - affected `fof/oauth` ≤ 1.7.3, and 2.0.0-beta.1 – 2.0.0-beta.3**
 
-# 1. What the vulnerability is
+# What the vulnerability is
 
 Flarum is a popular open-source forum. The FriendsOfFlarum **OAuth** extension lets a forum
 offer "Sign in with…" buttons — Discord, GitHub, Google, and others. The idea is simple: the
@@ -41,7 +41,7 @@ pre-registration hijack).
 
 ---
 
-# 2. Root cause analysis
+# Root cause analysis
 
 ## The misleadingly-named check
 
@@ -126,7 +126,7 @@ email is verified.**
 
 ---
 
-# 3. Proof of concept — steps
+# Proof of concept — steps
 
 **Preconditions**
 - A Flarum forum running `fof/oauth` ≤ 1.7.3 (or 2.0.0-beta.1–beta.3) with **Discord sign-in enabled**.
@@ -149,7 +149,7 @@ email is verified.**
 
 ---
 
-# 4. Remediation
+# Remediation
 
 - **Update immediately** to `fof/oauth` **1.7.4** or **2.0.0-beta.4**.
 - The fix makes the extension require the provider's verified flag before an email is trusted,
@@ -160,7 +160,7 @@ email is verified.**
 
 ---
 
-# 5. Timeline
+# Timeline
 
 - **Reported** privately to FriendsOfFlarum via coordinated disclosure.
 - **Reproduced** end-to-end and **patched** by the maintainers in 1.7.4 / 2.0.0-beta.4.
